@@ -16,11 +16,11 @@ COPY . .
 # Собираем приложение
 RUN npm run build
 
-# Удаляем dev зависимости для уменьшения размера образа
-RUN npm prune --production
+# НЕ удаляем dev зависимости - они нужны для миграций
+# RUN npm prune --production
 
 # Открываем порт для приложения
 EXPOSE 3000
 
-# Запускаем приложение
-CMD ["npm", "start"] 
+# Запускаем приложение с миграциями через npm скрипт
+CMD ["npm", "run", "start:production"] 

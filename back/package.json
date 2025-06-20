@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
+    "start:production": "npm run db:migrate && npm start",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "clean": "rimraf dist",
     "db:migrate": "knex migrate:latest --knexfile src/database/knexfile.ts",
