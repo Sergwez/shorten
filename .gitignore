@@ -1,0 +1,105 @@
+# Зависимости
+node_modules/
+*/node_modules/
+
+# Скомпилированные файлы
+dist/
+*/dist/
+build/
+*/build/
+
+# Логи
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime данные
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Покрытие тестов
+coverage/
+*.lcov
+.nyc_output
+
+# Инструменты разработки
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS генерируемые файлы
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Переменные окружения
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Кэш
+.cache/
+.parcel-cache/
+
+# Next.js
+.next/
+
+# Nuxt.js
+.nuxt/
+
+# Gatsby
+.cache/
+public/
+
+# Vuepress
+.vuepress/dist
+
+# Serverless
+.serverless/
+
+# FuseBox
+.fusebox/
+
+# DynamoDB Local
+.dynamodb/
+
+# TernJS
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Docker
+.dockerignore
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Мок данные для тестов (если нужно)
+# test-data/
+
+# База данных (если локальная)
+*.db
+*.sqlite
+*.sqlite3 

@@ -1,0 +1,150 @@
+config:
+  target: 'http://localhost:3000'
+  plugins:
+    expect: {}
+  processor: './artillery-processor.js'
+  phases:
+    # # Warm-up phase
+    # - duration: 30
+    #   arrivalRate: 10
+    #   name: "Warm-up"
+    # # Gradual ramp-up
+    # - duration: 60
+    #   arrivalRate: 50
+    #   rampTo: 200
+    #   name: "Ramp-up"
+    # # Sustained load
+    # - duration: 120
+    #   arrivalRate: 200
+    #   name: "Sustained Load"
+    # Peak burst
+    - duration: 20
+      arrivalRate: 500
+      rampTo: 1000
+      name: "Peak Burst"
+    # # Stress test
+    # - duration: 90
+    #   arrivalRate: 1000
+    #   rampTo: 2000
+    #   name: "Stress Test"
+    # # Recovery phase
+    # - duration: 60
+    #   arrivalRate: 100
+    #   rampTo: 10
+    #   name: "Recovery"
+  payload:
+    # Pre-defined popular URLs for cache testing
+    path: popular-urls.csv
+    fields:
+      - shortCode
+    order: sequence
+    skipHeader: true
+  defaults:
+    headers:
+      User-Agent: "Artillery Load Test"
+      Accept: "application/json"
+
+before:
+  flow:
+    - log: "Starting advanced load test..."
+    - log: "URLs should be pre-created with create-test-data.js"
+
+scenarios:
+  # Main redirect scenario (60% weight)
+  - name: "Popular URL Redirects (Cached)"
+    weight: 60
+    flow:
+      - get:
+          url: "/{{ shortCode }}"
+          followRedirect: false
+          expect:
+            - statusCode: [301, 302, 404]
+          capture:
+            - header: "location"
+              as: "redirectUrl"
+            - header: "x-cache"
+              as: "cacheStatus"
+          afterResponse: "recordCacheHit"
+
+  # # New URL creation (15% weight)
+  # - name: "Create Short URLs"
+  #   weight: 15
+  #   flow:
+  #     - post:
+  #         url: "/shorten"
+  #         json:
+  #           originalUrl: "https://example.com/page/{{ $randomString() }}"
+  #           alias: "test-{{ $randomString() }}"
+  #           expiresAt: "{{ generateExpiryDate() }}"
+  #         expect:
+  #           - statusCode: 201
+  #           - contentType: json
+  #           - hasProperty: "shortCode"
+  #         capture:
+  #           - json: "$.shortCode"
+  #             as: "newShortCode"
+  #         afterResponse: "recordNewUrl"
+
+  # # URL info retrieval (10% weight)  
+  # - name: "Get URL Information"
+  #   weight: 10
+  #   flow:
+  #     - get:
+  #         url: "/info/{{ shortCode }}"
+  #         expect:
+  #           - statusCode: [200, 404]
+  #           - contentType: json
+  #         afterResponse: "recordInfoRequest"
+
+  # # Redirect with click tracking (10% weight)
+  # - name: "Tracked Redirects"
+  #   weight: 10
+  #   flow:
+  #     - get:
+  #         url: "/{{ shortCode }}"
+  #         followRedirect: false
+  #         expect:
+  #           - statusCode: [301, 302, 404]
+  #         afterResponse: "recordTrackedRedirect"
+  #     - think: 1
+  #     - get:
+  #         url: "/info/{{ shortCode }}"
+  #         expect:
+  #           - statusCode: [200, 404]
+
+  # # Expired URL handling (3% weight)
+  # - name: "Expired URL Access"
+  #   weight: 3
+  #   flow:
+  #     - get:
+  #         url: "/expired-{{ $randomString() }}"
+  #         expect:
+  #           - statusCode: 404
+  #         afterResponse: "recordExpiredAccess"
+
+  # # Invalid URL patterns (2% weight)
+  # - name: "Invalid URL Patterns"
+  #   weight: 2
+  #   flow:
+  #     - get:
+  #         url: "/{{ $randomString() }}-invalid"
+  #         expect:
+  #           - statusCode: 404
+  #         afterResponse: "recordNotFound"
+
+# Custom metrics and SLOs
+expect:
+  thresholds:
+    # Response time thresholds
+    - http.response_time.p95: 100  # 95% under 100ms
+    - http.response_time.p99: 500  # 99% under 500ms
+    - http.response_time.median: 50 # Median under 50ms
+    
+    # Success rate thresholds
+    - http.request_rate: "> 100"   # At least 100 RPS
+    - http.response_time.min: "< 1000" # No response over 1s
+    
+    # Custom metrics thresholds
+    - plugins.metrics-by-endpoint.response_time./: 10 # Redirects under 10ms
+    - cache_hit_rate: "> 80"       # Cache hit rate over 80%
+    - error_rate: "< 5"            # Error rate under 5%

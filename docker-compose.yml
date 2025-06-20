@@ -1,0 +1,82 @@
+services:
+  # База данных PostgreSQL
+  database:
+    build:
+      context: ./bd
+      dockerfile: Dockerfile
+    container_name: shorts-database
+    environment:
+      POSTGRES_DB: shorts_db
+      POSTGRES_USER: shorts_user
+      POSTGRES_PASSWORD: shorts_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    container_name: shorts-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: shorts-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_HOST=database
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=shorts_db
+      - DATABASE_USER=shorts_user
+      - DATABASE_PASSWORD=shorts_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - database
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: shorts-frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://backend:3000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data: 
